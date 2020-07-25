@@ -61,9 +61,11 @@ import_ip $ip_project_dir/manage_ip.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci
 # force create the synth_1 path (need to make soft link in Makefile)
 if {[string equal [get_runs -quiet core_synth_1] ""]} {
     create_run -flow "Vivado Synthesis $base_version" \
-    -strategy "Flow_AreaOptimized_high" -constrset constrs_1 core_synth_1
+    -strategy "Vivado Synthesis Defaults" -constrset constrs_1 core_synth_1
+#    -strategy "Flow_AreaOptimized_high" -constrset constrs_1 core_synth_1
 } else {
-    set_property strategy "Flow_AreaOptimized_high" [get_runs core_synth_1]
+    set_property strategy "Vivado Synthesis Defaults" [get_runs core_synth_1]
+#    set_property strategy "Flow_AreaOptimized_high" [get_runs core_synth_1]
     set_property flow "Vivado Synthesis $base_version" [get_runs core_synth_1]
 }
 # do not flatten design

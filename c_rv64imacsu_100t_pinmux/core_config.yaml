@@ -1,4 +1,4 @@
-ISA: RV64IMAFDCSU
+ISA: RV64IMACSU
 iepoch_size: 2
 depoch_size: 1
 dtvec_base: 0
