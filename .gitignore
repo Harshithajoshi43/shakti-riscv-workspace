@@ -1,0 +1,3 @@
+*.pyc
+
+c_rv64imacsu_100t_pinmux/configure/__pycache__/
