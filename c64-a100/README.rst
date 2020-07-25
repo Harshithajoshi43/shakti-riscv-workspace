@@ -32,20 +32,22 @@ PLIC     'h0C00_0000   'h0C01_001F
 
 PinMuxing Rules
 ^^^^^^^^^^^^^^^
-=========== ======== ======== ========
-Soc_signal  Config-0 Config-1 Config-2
-=========== ======== ======== ========
-io7_cell    GPIO[0]  UART1-RX  -
-io8_cell    GPIO[1]  UART1-TX  -
-io9_cell    GPIO[2]  UART2-RX  -
-io10_cell   GPIO[3]  UART3-TX  PWM_0
-io12_cell   GPIO[5]  -         PWM_1
-io13_cell   GPIO[6]  -         PWM_2
-io16_cell   GPIO[9]  -         PWM_3
-io17_cell   GPIO[10] SPI1_NCS  PWM_4
-io18_cell   GPIO[11] SPI1_MOSI PWM_5
-io19_cell   GPIO[12] SPI1_MISO - 
-io20_cell   GPIO[13] SPI1_CLK  -
+
+=========== ========= =========  ========
+Soc signal  Config-0  Config-1   Config-2
+=========== ========= =========  ========
+io7_cell    GPIO[0]   UART1-RX   -
+io8_cell    GPIO[1]   UART1-TX   -
+io9_cell    GPIO[2]   UART2-RX   -
+io10_cell   GPIO[3]   UART3-TX   PWM_0
+io12_cell   GPIO[5]   -          PWM_1
+io13_cell   GPIO[6]   -          PWM_2
+io16_cell   GPIO[9]   -          PWM_3
+io17_cell   GPIO[10]  SPI1_NCS   PWM_4
+io18_cell   GPIO[11]  SPI1_MOSI  PWM_5
+io19_cell   GPIO[12]  SPI1_MISO  -
+io20_cell   GPIO[13]  SPI1_CLK   -
+=========== ========= =========  ========
 
 FPGA Board Connector Mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -112,6 +114,7 @@ spi0_miso   qspi_dq[1]    K18
 i2c1_scl    ck_scl        L18
 i2c1_sda    ck_sda        M18
 sys_rst     ck_rst        C2
+==========  ============= =============
 
 
 
