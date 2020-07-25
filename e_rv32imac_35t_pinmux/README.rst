@@ -30,16 +30,22 @@ Clint    'h0200_0000   'h020B_FFFF
 PLIC     'h0C00_0000   'h0C01_001F
 =======  ============  =============
 
-To Build MCS File:
-^^^^^^^^^^^^^^^^^
-
-.. code-block:: shell-session
-
-  $ git clone https://gitlab.com/shaktiproject/gc2020.git
-  $ cd e32-a35/
-  $ make generate_verilog generate_boot_files ip_build arty_build generate_mcs program_mcs JOBS=<jobs>
-
-
+PinMuxing Rules
+^^^^^^^^^^^^^^^
+=========== ======== ======== ========
+Soc_signal  Config-0 Config-1 Config-2
+=========== ======== ======== ========
+io7_cell    GPIO[0]  UART1-RX  -
+io8_cell    GPIO[1]  UART1-TX  -
+io9_cell    GPIO[2]  UART2-RX  -
+io10_cell   GPIO[3]  UART3-TX  PWM_0
+io12_cell   GPIO[5]  -         PWM_1
+io13_cell   GPIO[6]  -         PWM_2
+io16_cell   GPIO[9]  -         PWM_3
+io17_cell   GPIO[10] SPI1_NCS  PWM_4
+io18_cell   GPIO[11] SPI1_MOSI PWM_5
+io19_cell   GPIO[12] SPI1_MISO - 
+io20_cell   GPIO[13] SPI1_CLK  -
 
 FPGA Board Connector Mapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -115,6 +121,16 @@ communicate to the host system through the micro-USB port (connector J10).
 The debug interface of the processor is connected to the Xilinx JTAG tap, which in-turn is time 
 multiplexed with uart0, and is connected to the micro-USB port. This configuration let’s us to 
 not have dedicated JTAG pins, thereby eliminating the need for an external JTAG Debug probe (like J-Link).
+
+
+To Build MCS File:
+^^^^^^^^^^^^^^^^^
+
+.. code-block:: shell-session
+
+  $ git clone https://gitlab.com/shaktiproject/gc2020.git
+  $ cd e32-a35/
+  $ make generate_verilog generate_boot_files ip_build arty_build generate_mcs program_mcs JOBS=<jobs>
 
 Connecting to the Target
 ^^^^^^^^^^^^^^^^^^^^^^^^
