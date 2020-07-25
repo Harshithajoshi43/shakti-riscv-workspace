@@ -138,7 +138,7 @@ To Build MCS File:
 
 Connecting to the Target
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Please make sure you are using the 64-bit toolchain available `here
+Please make sure you are using the 32-bit toolchain available `here
 <https://gitlab.com/shaktiproject/software/shakti-tools/>`_. 
 (This toolchain contains the ``openocd`` binary which has been tweaked for our bscan2e based JTAG
 protocol)
@@ -153,7 +153,7 @@ In yet Another Terminal window
 
 .. code-block:: yaml
 
-  $ riscv64-unknown-elf-gdb -x gdb.script
+  $ riscv32-unknown-elf-gdb -x gdb.script
 
 Launch UART Console
 
