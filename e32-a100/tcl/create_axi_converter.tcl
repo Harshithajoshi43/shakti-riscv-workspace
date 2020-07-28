@@ -14,7 +14,7 @@ if { [get_ips -quiet clk_converter] eq "" } {
 }
 
 set_property -dict [list \
-  CONFIG.DATA_WIDTH {64} \
+  CONFIG.DATA_WIDTH {32} \
   CONFIG.ID_WIDTH {4} \
   CONFIG.ADDR_WIDTH {28} ] [get_ips clk_converter]
 generate_target {instantiation_template} [get_ips clk_converter]

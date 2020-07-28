@@ -17,7 +17,7 @@
 `define DebugBase         'h0000_0010
 `define DebugEnd          'h0000_001F
 `define SlowBase          'h0000_1000
-`define SlowEnd           'h0004_1400
+`define SlowEnd           'h0004_15FF
 
 `define Num_Masters 1
 

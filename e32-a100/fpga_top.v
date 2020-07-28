@@ -27,7 +27,7 @@ Details:
 
 --------------------------------------------------------------------------------------------------
 */
-module fpga_top#( parameter AXI_ID_WIDTH = 1, parameter AXI_ADDR_WIDTH = 28)
+module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
   (
   // ---- DDR ports --------------//
   inout  [15:0] ddr3_dq,
