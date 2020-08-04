@@ -194,7 +194,7 @@ package decoder;
   `endif
   `ifdef usertraps
     u_interrupts =                mie & mip & zeroExtend(mideleg) & signExtend(pack(u_enabled))
-              `ifdef supervisor & sideleg `endif
+              `ifdef supervisor & ~zeroExtend(sideleg) `endif
               `ifdef debug      & signExtend(pack(!debug.core_is_halted)) `endif ;
   `endif
 
