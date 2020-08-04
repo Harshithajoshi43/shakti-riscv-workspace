@@ -1,7 +1,7 @@
 ISA: RV64IMACSUN
 iepoch_size: 2
 depoch_size: 1
-dtvec_base: 0
+dtvec_base: 16
 s_extension:
   mode: sv39
   itlb_size: 2
