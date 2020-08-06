@@ -13,7 +13,7 @@ E32-A35
 - 2 pmp regions
 - 2 cycle HW multiplier
 - 32 cycle HW divider
-- BRAM memory of 128KBytes
+- BRAM memory of 192KBytes
 - ROM of 4KBytes
 - 6 PWM controllers
 - 2 SPI controllers

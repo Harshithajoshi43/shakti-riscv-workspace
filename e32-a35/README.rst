@@ -8,7 +8,8 @@ Memory MAP
 =======  ============  =============
 Config   base-address  bound-address
 =======  ============  =============
-Memory   'h8000_0000   'h87FF_FFFF
+Memory   'h8000_0000   'h8001_FFFF
+Memory2  'h8003_0000   'h8003_FFFF
 BootRAM  'h0000_1000   'h0000_2FFF
 UART0    'h0001_1300   'h0000_1340
 UART1    'h0001_1400   'h0000_1440
