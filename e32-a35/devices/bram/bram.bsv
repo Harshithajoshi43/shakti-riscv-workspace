@@ -40,12 +40,15 @@ package bram;
   import GetPut::*;
 	import device_common::*;
   import Assert::*;
+  import RegFile :: * ;
 
   `include "Logger.bsv"
   export Ifc_bram_axi4 (..);
   export Ifc_bram_axi4lite (..);
+  export Ifc_bram_rf_axi4lite (..);
   export mkbram_axi4;
   export mkbram_axi4lite;
+  export mkbram_rf_axi4lite;
 
   interface UserInterface#(numeric type addr_width,  numeric type data_width, numeric type index_size);
     method Action read_request (Bit#(addr_width) addr);
@@ -54,6 +57,62 @@ package bram;
     method ActionValue#(Tuple2#(Bool, Bit#(data_width))) read_response;
     method ActionValue#(Bool) write_response;
   endinterface
+  
+  // to make is synthesizable replace addr_width with Physical Address width
+  // data_width with data lane width
+  module mkbram_rf#(parameter Integer slave_base, parameter String readfile,
+                                                parameter String modulename )
+      (UserInterface#(addr_width, data_width, index_size))
+      provisos(
+        Mul#(TDiv#(data_width, TDiv#(data_width, 8)), TDiv#(data_width, 8),data_width)  );
+
+    Integer byte_offset = valueOf(TLog#(TDiv#(data_width, 8)));
+  	// we create 2 32-bit BRAMs since the xilinx tool is easily able to map them to BRAM32BE cells
+  	// which makes it easy to use data2mem for updating the bit file.
+  	RegFile#(Bit#(TSub#(index_size,TLog#(TDiv#(data_width,8)))), Bit#(data_width)) dmemMSB <-  	mkRegFileFull();
+
+    /*doc:reg: */
+    Reg#(Bit#(data_width)) rg_rd_data <- mkReg(0);
+    Reg#(Bool) read_request_sent[2] <-mkCReg(2,False);
+
+    // A write request to memory. Single cycle operation.
+    // This model assumes that the master sends the data strb aligned for the data_width bytes.
+    // Eg. : is size is HWord at address 0x2 then the wstrb for 64-bit data_width is: 'b00001100
+    // And the data on the write channel is assumed to be duplicated.
+    method Action write_request (Tuple3#(Bit#(addr_width), Bit#(data_width),
+                                                                  Bit#(TDiv#(data_width, 8))) req);
+      let {addr, data, strb}=req;
+			Bit#(TSub#(index_size,TLog#(TDiv#(data_width, 8)))) index_address=
+			                          (addr - fromInteger(slave_base))[valueOf(index_size)-1:byte_offset];
+//			dmemMSB.b.put(strb,index_address,truncateLSB(data));
+			dmemMSB.upd(index_address,truncateLSB(data));
+
+      `logLevel( bram, 0, $format("",modulename,": Recieved Write Request for Address: %h Index: %h\
+ Data: %h wrstrb: %h", addr, index_address, data, strb))
+  	endmethod
+
+    // The write response will always be an error.
+    method ActionValue#(Bool) write_response;
+      return False;
+    endmethod
+
+    // capture a read_request and latch the address on a BRAM.
+    method Action read_request (Bit#(addr_width) addr);
+			Bit#(TSub#(index_size,TLog#(TDiv#(data_width, 8)))) index_address=
+			                          (addr - fromInteger(slave_base))[valueOf(index_size)-1:byte_offset];
+//      dmemMSB.a.put(0, index_address, ?);
+      rg_rd_data <= dmemMSB.sub(index_address);
+      read_request_sent[1]<= True;
+      `logLevel( bram, 0, $format("",modulename,": Recieved Read Request for Address: %h Index: %h",
+                                                                            addr, index_address))
+  	endmethod
+
+    // respond with data from the BRAM.
+    method ActionValue#(Tuple2#(Bool, Bit#(data_width))) read_response if(read_request_sent[0]);
+      read_request_sent[0]<=False;
+      return tuple2(False, rg_rd_data);
+    endmethod
+  endmodule
 
   // to make is synthesizable replace addr_width with Physical Address width
   // data_width with data lane width
@@ -191,6 +250,51 @@ package bram;
       let {err, data0}<-dut.read_response;
       AXI4_Rd_Data#(data_width, user_width) r = AXI4_Rd_Data {rresp: AXI4_OKAY, rdata: data0 ,
         rlast:rg_readburst_counter==rg_read_packet.arlen, ruser: 0, rid:rg_read_packet.arid};
+      `logLevel( bram, 1, $format("",modulename,": Responding Read Request with Data: %h ",data0))
+      s_xactor.i_rd_data.enq(r);
+    endrule
+    interface slave = s_xactor.axi_side;
+  endmodule
+  
+  interface Ifc_bram_rf_axi4lite#(numeric type addr_width, numeric type data_width, numeric type user_width,
+                                                                           numeric type index_size);
+    interface AXI4_Lite_Slave_IFC#(addr_width, data_width, user_width) slave;
+  endinterface
+
+
+  module mkbram_rf_axi4lite#(parameter Integer slave_base, parameter String readfile,
+         parameter String modulename )
+        (Ifc_bram_rf_axi4lite#(addr_width, data_width, user_width, index_size))
+      provisos(
+        Mul#(TDiv#(data_width, TDiv#(data_width, 8)), TDiv#(data_width, 8),data_width)  );
+    UserInterface#(addr_width, data_width, index_size) dut <- mkbram_rf(slave_base, readfile,
+                                                                                        modulename);
+	  AXI4_Lite_Slave_Xactor_IFC #(addr_width, data_width, user_width)  s_xactor <- mkAXI4_Lite_Slave_Xactor;
+    Integer byte_offset = valueOf(TDiv#(data_width, 32));
+    Reg#(Bit#(2)) rg_size <-mkReg(3);
+    Reg#(Bit#(TAdd#(1, TDiv#(data_width, 32)))) rg_offset <-mkReg(0);
+    // If the request is single then simple send ERR. If it is a burst write request then change
+    // state to Burst and do not send response.
+    rule write_request_address_channel;
+      let aw <- pop_o (s_xactor.o_wr_addr);
+      let w  <- pop_o (s_xactor.o_wr_data);
+	    let b = AXI4_Lite_Wr_Resp {bresp: AXI4_LITE_OKAY, buser: aw.awuser};
+      dut.write_request(tuple3(aw.awaddr, w.wdata, w.wstrb));
+	  	s_xactor.i_wr_resp.enq (b);
+    endrule
+    // read first request and send it to the dut. If it is a burst request then change state to
+    // Burst. capture the request type and keep track of counter.
+    rule read_request_first;
+		  let ar<- pop_o(s_xactor.o_rd_addr);
+      dut.read_request(ar.araddr);
+      rg_size<= ar.arsize;
+      rg_offset<= ar.araddr[byte_offset:0];
+    endrule
+    // get data from the memory. shift,  truncate, duplicate based on the size and offset.
+    rule read_response;
+      let {err, data0}<-dut.read_response;
+      AXI4_Lite_Rd_Data#(data_width, user_width) r = AXI4_Lite_Rd_Data {rresp: AXI4_LITE_OKAY, rdata: data0 ,
+        ruser: 0};
       `logLevel( bram, 1, $format("",modulename,": Responding Read Request with Data: %h ",data0))
       s_xactor.i_rd_data.enq(r);
     endrule

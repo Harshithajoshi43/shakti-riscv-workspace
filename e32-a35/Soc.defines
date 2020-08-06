@@ -3,8 +3,9 @@
 `define Mem_master_num 1
 `define Fetch_master_num 2
 
-`define Num_Slaves 9
+`define Num_Slaves 10
 `define Memory_slave_num 0
+`define Memory2_slave_num 9
 `define Clint_slave_num 1
 `define Debug_slave_num 2
 `define PWMCluster_slave_num 3
@@ -30,6 +31,8 @@
 `define ClintEnd          'h020B_FFFF
 `define MemoryBase        'h8000_0000
 `define MemoryEnd         'h8001_FFFF
+`define Memory2Base        'h8003_0000
+`define Memory2End         'h8003_FFFF
 
 // - PWM cluster
 `define PWMCluster_Num_Slaves 7

@@ -69,6 +69,8 @@ package Soc;
     Bit#(TLog#(`Num_Slaves)) slave_num = 0;
     if(addr >= `MemoryBase && addr<= `MemoryEnd)
       slave_num = `Memory_slave_num;
+    else if(addr >= `Memory2Base && addr<= `Memory2End)
+      slave_num = `Memory2_slave_num;
     else if(addr >= `ClintBase && addr <= `ClintEnd)
       slave_num = `Clint_slave_num;
     else if(addr >= `DebugBase && addr <= `DebugEnd)
@@ -280,6 +282,7 @@ package Soc;
     Ifc_mixed_cluster mixed_cluster <- mkmixed_cluster;
     Ifc_err_slave_axi4lite#(`paddr,XLEN,0) err_slave <- mkerr_slave_axi4lite;
     Ifc_bram_axi4lite#(`paddr, XLEN, 0,  17) mem <- mkbram_axi4lite('h80000000, "code.mem","Memory");
+    Ifc_bram_axi4lite#(`paddr, XLEN, 0,  16) mem2 <- mkbram_axi4lite('h80020000, "code1.mem","Memory");
     Ifc_bram_axi4lite#(`paddr, XLEN, 0,  13) boot <- mkbram_axi4lite('h1000, "boot.mem","Boot");
     Wire#(Bit#(2)) wr_ext_interrutps <- mkWire();
 
@@ -396,6 +399,7 @@ package Soc;
     mkConnection (fabric.v_to_slaves [`MixedCluster_slave_num], mixed_cluster.slave);
     mkConnection (fabric.v_to_slaves [`Err_slave_num ] , err_slave.slave);
 	  mkConnection (fabric.v_to_slaves [`Memory_slave_num], mem.slave);
+	  mkConnection (fabric.v_to_slaves [`Memory2_slave_num], mem2.slave);
 	  mkConnection (fabric.v_to_slaves [`Boot_slave_num], boot.slave);
 
     // sideband connection
