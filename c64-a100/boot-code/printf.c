@@ -273,8 +273,10 @@ int printf(const char* fmt, ...)
 
 #include <stdint.h>
 #include <stdarg.h>
-#include "utils.h"
-#include "uart.h"
+#include <stdio.h>
+
+// #include "utils.h"
+// #include "uart.h"
 
 /** @fn  itoa
  * @brief integer to string conversion
@@ -387,7 +389,7 @@ void _printf_(const char *fmt, va_list ap)
 				case 'f':
 					float_num =  va_arg(ap, double);
 
-					ftoa(float_num, float_arr, 6);
+					//ftoa(float_num, float_arr, 6);
 
 					for( i = 0; float_arr[i] != '\0'; i++)
 					{

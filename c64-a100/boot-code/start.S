@@ -21,7 +21,25 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
  ***************************************************************************/
-#include "encoding.h"
+
+#ifndef DEFINES_H
+#define DEFINES_H
+
+#define REGSIZE __riscv_xlen/8
+
+#if __riscv_xlen == 64
+#define LREG ld
+#define SREG sd
+#else
+#define LREG lw
+#define SREG sw
+#endif
+
+#define MSTATUS_MPP         0x00001800
+#define MSTATUS_FS          0x00006000
+
+#endif
+
 
 .section ".text.init"
 .globl _start
@@ -144,3 +162,4 @@ _tdata_end:
 .section ".tbss.end"
 .globl _tbss_end
 _tbss_end:
+
