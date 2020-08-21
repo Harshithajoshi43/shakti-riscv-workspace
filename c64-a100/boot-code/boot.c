@@ -7,18 +7,7 @@
 
  Copyright (C) 2019  IIT Madras. All rights reserved.
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// check LICENSE.iitm
 
  ***************************************************************************/
 
@@ -111,14 +100,6 @@ void spi_tx_rx_start(){
 	set_spi(spi_cr2, (SPI_RX_IMM_START));
 }
 
-void spi_enable(){
-	set_spi(spi_cr1, (SPI_BR(7)|SPI_TOTAL_BITS_TX(4)|SPI_TOTAL_BITS_RX(16)|SPI_SPE));
-}
-
-void spi_rx_enable(){
-	set_spi(spi_cr2, (SPI_RX_START));
-}
-
 int spi_rxne_enable(){
 	int value = 0;
 	int count = 0;
@@ -179,17 +160,6 @@ int flash_cmd_read(int command)
 	return dr5;
 }
 
-int flash_status_register_read()
-{
-	int stat = 0x3;
-
-	while (stat & 0x03){
-		stat = flash_cmd_read(0x05000000);
-	}
-
-	return 0;
-}
-
 int flash_device_id()
 {
 	int dr1, dr2, dr3;
@@ -239,7 +209,6 @@ void main()
         char isa[40];
 	int retval = 0;
 	int arch = 0;
-	int hart = 0;
 
 	isa[i++] = 'R';
 	isa[i++] = 'V';
@@ -263,14 +232,6 @@ void main()
 	     [arch]
 	     "=r"
 	     (arch)
-	    );
-
-	asm volatile(
-	     "csrr %[hart], mhartid\n"
-	     :
-	     [hart]
-	     "=r"
-	     (hart)
 	    );
 
 	asm volatile(
@@ -354,12 +315,12 @@ void main()
 	isa[i]='\0';
 
 	printf("%s",bootlogo);
-	printf("Booting on Vajra! hart %d\n",hart);
+	printf("Booting on Vajra! hart 0 \n");
 	printf("Welcome to the world of Shakti !\n");
 	printf("Vajra is a SoC build on top of Artix7 100T.\n");
 	printf("The core belongs to Shakti C class, 64 bit.\n");
 	printf("Supported ISA: %s.\n", isa);
-	printf("Processor Arch ID: %d.\n", arch);
+	printf("Processor Arch ID: %x.\n", arch);
 	printf("%s\n","Booting... vspi1.0\n");
 
 	spi_init();

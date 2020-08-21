@@ -1,32 +1,36 @@
 /***************************************************************************
  * Project           			:  shakti devt board
- * Name of the file	     		:  syscalls.c
- * Created date			        :  3.10.2019
- * Brief Description of file            :  It serves as UART Interface 
-                                           
+ * Name of the file	     		:  system.c
+ * Created date			        :  21.8.2020
+ * Brief Description of file            :   Use for trap and UART display
 
- Copyright (C) 2019  IIT Madras. All rights reserved.
+ Copyright (C) 2020 IIT Madras. All rights reserved.
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//check LICENSE.iitm
 
  ***************************************************************************/
 
+
 #include <stdint.h>
+#include <stddef.h>
 #include <stdarg.h>
-#include <stdio.h>
 
+#undef putchar
+int putchar(int ch)
+{
+  
+  register char a0 asm("a0") = ch;
+  asm volatile ("li t1, 0x11300" "\n\t"	//The base address of UART config registers
+        "1: lb a1, 12(t1)" "\n\t"
+        "andi a1,a1,0x2" "\n\t"
+        "bnez a1, 1b" "\n\t"
+				"sb a0, 4(t1)"  "\n\t"
+				:
+				:
+				:"a0","t1","cc","memory");
+  return 0;
 
+}
 
 /** @fn  itoa
  * @brief integer to string conversion
@@ -96,18 +100,7 @@ void _printf_(const char *fmt, va_list ap)
 
 			switch (ch = *(unsigned char *) fmt++) {
 
-				// long flag (doubled for long long)
-				case 'l':
-					lflag++;
-					backtothebeginning = 1;
-					break;
-
-					// character
-				case 'c':
-					putchar(va_arg(ap, int));
-					break;
-
-					// string
+				// string
 				case 's':
 					if ((p = va_arg(ap, char *)) == NULL)
 						p = "(null)";
@@ -132,48 +125,6 @@ void _printf_(const char *fmt, va_list ap)
 						putchar('-');
 						num = -(long long) num;
 					}
-
-					itoa( num, base);
-
-					break;
-				case 'f':
-					float_num =  va_arg(ap, double);
-
-					//ftoa(float_num, float_arr, 6);
-
-					for( i = 0; float_arr[i] != '\0'; i++)
-					{
-						putchar(float_arr[i]);
-						if(i > 29) break;
-					}
-					break;
-
-					// unsigned decimal
-				case 'u':
-					base = 10;
-
-					if (lflag >= 2)
-						num = va_arg(ap, unsigned long long);
-					else if (lflag)
-						num = va_arg(ap, unsigned long);
-					else
-						num = va_arg(ap, unsigned int);
-
-					itoa( num, base);
-
-					break;
-
-					// (unsigned) octal
-				case 'o':
-					// should do something with padding so it's always 3 octits
-					base = 8;
-
-					if (lflag >= 2)
-						num = va_arg(ap, unsigned long long);
-					else if (lflag)
-						num = va_arg(ap, unsigned long);
-					else
-						num = va_arg(ap, unsigned int);
 
 					itoa( num, base);
 
@@ -216,6 +167,7 @@ void _printf_(const char *fmt, va_list ap)
 	}
 }
 
+#undef printf
 /** @fn printf
  * @brief function to print characters on file
  * @details prints the characters on terminal
@@ -232,4 +184,11 @@ int printf(const char* fmt, ...)
 	va_end(ap);
 	return 0; // incorrect return value, but who cares, anyway?
 }
+
+void handle_trap(uintptr_t mcause, uintptr_t epc)
+{
+	printf("Trap happened ! \n mcause = %x, epc = %x", mcause, epc);
+	while(1);
+}
+
 

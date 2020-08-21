@@ -5,46 +5,19 @@
  * Brief Description of file            :  It is a start up file
                                            
 
- Copyright (C) 2019  IIT Madras. All rights reserved.
+ Copyright (C) 2020  IIT Madras. All rights reserved.
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//check LICENSE.iitm
 
  ***************************************************************************/
-
-#ifndef DEFINES_H
-#define DEFINES_H
-
-#define REGSIZE __riscv_xlen/8
-
-#if __riscv_xlen == 64
-#define LREG ld
-#define SREG sd
-#else
-#define LREG lw
-#define SREG sw
-#endif
-
-#define MSTATUS_MPP         0x00001800
-#define MSTATUS_FS          0x00006000
-
-#endif
-
 
 .section ".text.init"
 .globl _start
 
 _start:
+la t0, trap_entry
+csrw mtvec, t0
+
 li  x1, 0
 li  x2, 0
 li  x3, 0
@@ -77,13 +50,6 @@ li  x29,0
 li  x30,0
 li  x31,0
 
-#clear any pending interrupt ?
-#sanity checkers
-
-/*
-   set sp and gp
-   memset gp to zero
- */
 # initialize global pointer
 .option push
 .option norelax
@@ -96,70 +62,20 @@ la gp, __global_pointer$
 la sp, __stack_pointer$
 .option pop
 
-
-/*
-   If 'f' specified in march
-
-   Detail learning, refer below -
-   https://salsa.debian.org/debian/gnulib/commit/67c6415e313434991ead97bb4b88cfca109cf570
-   https://github.com/gcc-mirror/gcc/blob/master/gcc/config/riscv/riscv-c.c
- */
-
-#ifdef __riscv_flen
-li t0, MSTATUS_FS 
-csrs mstatus, t0
-
-fssr    x0
-fmv.s.x f0, x0
-fmv.s.x f1, x0
-fmv.s.x f2, x0
-fmv.s.x f3, x0
-fmv.s.x f4, x0
-fmv.s.x f5, x0
-fmv.s.x f6, x0
-fmv.s.x f7, x0
-fmv.s.x f8, x0
-fmv.s.x f9, x0
-fmv.s.x f10,x0
-fmv.s.x f11,x0
-fmv.s.x f12,x0
-fmv.s.x f13,x0
-fmv.s.x f14,x0
-fmv.s.x f15,x0
-fmv.s.x f16,x0
-fmv.s.x f17,x0
-fmv.s.x f18,x0
-fmv.s.x f19,x0
-fmv.s.x f20,x0
-fmv.s.x f21,x0
-fmv.s.x f22,x0
-fmv.s.x f23,x0
-fmv.s.x f24,x0
-fmv.s.x f25,x0
-fmv.s.x f26,x0
-fmv.s.x f27,x0
-fmv.s.x f28,x0
-fmv.s.x f29,x0
-fmv.s.x f30,x0
-fmv.s.x f31,x0
-
-#endif
-
 la  tp, _end + 63
 and tp, tp, -64
 
-j init
+j main
 
+.global trap_entry
+.align 2
+trap_entry:
 
-.section ".tdata.begin"
-.globl _tdata_begin
-_tdata_begin:
+csrr a0, mcause
+csrr a1, mepc
+mv a2, sp
 
-.section ".tdata.end"
-.globl _tdata_end
-_tdata_end:
+jal handle_trap
 
-.section ".tbss.end"
-.globl _tbss_end
-_tbss_end:
+mret
 
