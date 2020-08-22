@@ -13,6 +13,7 @@
 
 .section ".text.init"
 .globl _start
+.globl _free_space
 
 _start:
 la t0, trap_entry
@@ -50,22 +51,10 @@ li  x29,0
 li  x30,0
 li  x31,0
 
-# initialize global pointer
-.option push
-.option norelax
-la gp, __global_pointer$
-.option pop
+la sp, 0x3000
 
-# initialize stack pointer
-.option push
-.option norelax
-la sp, __stack_pointer$
-.option pop
 
-la  tp, _end + 63
-and tp, tp, -64
-
-j main
+jal main
 
 .global trap_entry
 .align 2

@@ -38,3 +38,5 @@ char *bootlogo = "\n\
   ./(((*\n\
   .\n";
 
+int putchar(int ch);
+int printf(const char* fmt, ...);

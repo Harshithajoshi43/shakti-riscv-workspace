@@ -12,6 +12,7 @@
 
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -21,9 +22,9 @@ int putchar(int ch)
   
   register char a0 asm("a0") = ch;
   asm volatile ("li t1, 0x11300" "\n\t"	//The base address of UART config registers
-        "1: lb a1, 12(t1)" "\n\t"
+        "a: lb a1, 12(t1)" "\n\t"
         "andi a1,a1,0x2" "\n\t"
-        "bnez a1, 1b" "\n\t"
+        "bnez a1, a" "\n\t"
 				"sb a0, 4(t1)"  "\n\t"
 				:
 				:
@@ -100,60 +101,63 @@ void _printf_(const char *fmt, va_list ap)
 
 			switch (ch = *(unsigned char *) fmt++) {
 
-				// string
-				case 's':
-					if ((p = va_arg(ap, char *)) == NULL)
-						p = "(null)";
-					for (; (ch = *p) != '\0' ;) {
-						putchar(ch);
-						p++;
-					}
-					break;
+			case 'c':
+				putchar(va_arg(ap, int));
+				break;
 
-					// (signed) decimal
-				case 'd':
-					base = 10;
-
-					if (lflag >= 2)
-						num = va_arg(ap, long long);
-					else if (lflag ==1)
-						num = va_arg(ap, long);
-					else
-						num = va_arg(ap, int);
-
-					if ((long long) num < 0) {
-						putchar('-');
-						num = -(long long) num;
-					}
-
-					itoa( num, base);
-
-					break;
-
-				case 'x':
-					base = 16;
-
-					if (lflag >= 2)
-						num = va_arg(ap, unsigned long long);
-					else if (lflag)
-						num = va_arg(ap, unsigned long);
-					else
-						num = va_arg(ap, unsigned int);
-
-					itoa( num, base);
-
-					break;
-
-					// escaped '%' character
-				case '%':
+			case 's':
+				if ((p = va_arg(ap, char *)) == NULL)
+					p = "(null)";
+				for (; (ch = *p) != '\0' ;) {
 					putchar(ch);
-					break;
+					p++;
+				}
+				break;
 
-					// unrecognized escape sequence - just print it literally
-				default:
-					putchar('%');
-					fmt = last_fmt;
-					break;
+				// (signed) decimal
+			case 'd':
+				base = 10;
+
+				if (lflag >= 2)
+					num = va_arg(ap, long long);
+				else if (lflag ==1)
+					num = va_arg(ap, long);
+				else
+					num = va_arg(ap, int);
+
+				if ((long long) num < 0) {
+					putchar('-');
+					num = -(long long) num;
+				}
+
+				itoa( num, base);
+
+				break;
+
+			case 'x':
+				base = 16;
+
+				if (lflag >= 2)
+					num = va_arg(ap, unsigned long long);
+				else if (lflag)
+					num = va_arg(ap, unsigned long);
+				else
+					num = va_arg(ap, unsigned int);
+
+				itoa( num, base);
+
+				break;
+
+				// escaped '%' character
+			case '%':
+				putchar(ch);
+				break;
+
+				// unrecognized escape sequence - just print it literally
+			default:
+				putchar('%');
+				fmt = last_fmt;
+				break;
 			}
 
 			if (backtothebeginning)
@@ -181,7 +185,7 @@ int printf(const char* fmt, ...)
 	_printf_(fmt, ap);
 
 	va_end(ap);
-	return 0; // incorrect return value, but who cares, anyway?
+	return 0;
 }
 
 void handle_trap(uintptr_t mcause, uintptr_t epc)

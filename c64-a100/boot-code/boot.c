@@ -92,8 +92,15 @@ int get_spi(int* addr)
 	return *addr;
 }
 
-void spi_init(){
+void spi_init()
+{
 	set_spi(spi_cr1, (SPI_BR(7)|SPI_CPHA|SPI_CPOL));
+}
+
+void waitfor(unsigned int secs)
+{
+	unsigned int time = 0;
+	while(time++ < secs);
 }
 
 void spi_tx_rx_start(){
@@ -115,12 +122,6 @@ int spi_rxne_enable(){
 	return 1;
 }
 
-void waitfor(unsigned int secs) {
-
-	unsigned int time = 0;
-
-	while(time++ < secs);
-}
 
 int flash_cmd_to_read(int command, int addr)
 {
@@ -204,31 +205,13 @@ void main()
 {
 	unsigned int read_address;  // read/write from/to this address
 	int* bram_address = (int*) 0x80000000;
-	int read_value, i;
+	int read_value, i=0;
 	int size;
-        char isa[40];
+        char isa[40] = {0};
 	int retval = 0;
 	int arch = 0;
 
-	putchar(65);
-
-	isa[i++] = 'R';
-	isa[i++] = 'V';
-	isa[23] = '\0';
-	isa[24] = '\0';
-	isa[30] = '\0';
-
-	if(__riscv_xlen == 64 )
-	{
-		isa[i++] = '6';
-		isa[i++] = '4';
-	}else
-	{
-		isa[i++] = '3';
-		isa[i++] = '2';
-	}
-
-	asm volatile(
+		asm volatile(
 	     "csrr %[arch], marchid\n"
 	     :
 	     [arch]
@@ -242,7 +225,8 @@ void main()
 	     [retval]
 	     "=r"
 	     (retval)
-	    );
+	     );
+	i = 0;
 
 	if (retval & 0x1)
 		isa[i++]='A';
@@ -314,14 +298,15 @@ void main()
 
 	if (retval & 0x100000)
 		isa[i++]='U';
+
 	isa[i]='\0';
 
-	printf("%s",bootlogo);
+	printf("%s \n\nSHAKTI PROCESSORS \n\n",bootlogo);
+
 	printf("Booting on Vajra! hart 0 \n");
-	printf("Welcome to the world of Shakti !\n");
 	printf("Vajra is a SoC build on top of Artix7 100T.\n");
-	printf("The core belongs to Shakti C class, 64 bit.\n");
-	printf("Supported ISA: %s.\n", isa);
+	printf("The core belongs to Shakti C class, 64 bit.\n\n\n");
+	printf("Supported ISA: RV64ACIMNSU.\n");
 	printf("Processor Arch ID: %x.\n", arch);
 	printf("%s\n","Booting... vspi1.0\n");
 
