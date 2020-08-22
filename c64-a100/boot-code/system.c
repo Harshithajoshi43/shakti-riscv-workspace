@@ -167,7 +167,6 @@ void _printf_(const char *fmt, va_list ap)
 	}
 }
 
-#undef printf
 /** @fn printf
  * @brief function to print characters on file
  * @details prints the characters on terminal

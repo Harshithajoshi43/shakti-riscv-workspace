@@ -210,6 +210,8 @@ void main()
 	int retval = 0;
 	int arch = 0;
 
+	putchar(65);
+
 	isa[i++] = 'R';
 	isa[i++] = 'V';
 	isa[23] = '\0';
