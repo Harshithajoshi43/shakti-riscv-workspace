@@ -3,22 +3,11 @@
  * Name of the file	     		:  boot.c
  * Created date			        :  3.10.2019
  * Brief Description of file            :  boot code to copy bare metal appln 
-                                           from flash to physical memory.
+ from flash to physical memory.
 
  Copyright (C) 2019  IIT Madras. All rights reserved.
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// check LICENSE.iitm
 
  ***************************************************************************/
 
@@ -103,20 +92,19 @@ int get_spi(int* addr)
 	return *addr;
 }
 
-void spi_init(){
+void spi_init()
+{
 	set_spi(spi_cr1, (SPI_BR(7)|SPI_CPHA|SPI_CPOL));
+}
+
+void waitfor(unsigned int secs)
+{
+	unsigned int time = 0;
+	while(time++ < secs);
 }
 
 void spi_tx_rx_start(){
 	set_spi(spi_cr2, (SPI_RX_IMM_START));
-}
-
-void spi_enable(){
-	set_spi(spi_cr1, (SPI_BR(7)|SPI_TOTAL_BITS_TX(4)|SPI_TOTAL_BITS_RX(16)|SPI_SPE));
-}
-
-void spi_rx_enable(){
-	set_spi(spi_cr2, (SPI_RX_START));
 }
 
 int spi_rxne_enable(){
@@ -134,12 +122,6 @@ int spi_rxne_enable(){
 	return 1;
 }
 
-void waitfor(unsigned int secs) {
-
-	unsigned int time = 0;
-
-	while(time++ < secs);
-}
 
 int flash_cmd_to_read(int command, int addr)
 {
@@ -179,17 +161,6 @@ int flash_cmd_read(int command)
 	return dr5;
 }
 
-int flash_status_register_read()
-{
-	int stat = 0x3;
-
-	while (stat & 0x03){
-		stat = flash_cmd_read(0x05000000);
-	}
-
-	return 0;
-}
-
 int flash_device_id()
 {
 	int dr1, dr2, dr3;
@@ -212,21 +183,21 @@ int flash_device_id()
 	val1 = ( dr3 >> 16 ) & 0xff; //bitExtracted(dr3, 8, 17);
 	val2 = dr3 & 0xffff; //bitExtracted(dr3, 16, 1);
 
- 	printf("Device ID %x \n", val1);
- 	//printf("extracted device id %x \n",val2); 
+	printf("Device ID %x \n", val1);
+	//printf("extracted device id %x \n",val2); 
 
 	return 1;	
 }
 
 void jump_2_ram()
 {
-//	printf("\n%s\n","Control transferred to RAM");
+	//	printf("\n%s\n","Control transferred to RAM");
 	asm volatile("fence.i");
 	asm volatile( "li x30, 0x80000000" "\n\t"
-			"jr x30" "\n\t"
-			:
-			:
-			:"x30","cc","memory"
+		      "jr x30" "\n\t"
+		      :
+		      :
+		      :"x30","cc","memory"
 		    );
 }
 
@@ -234,133 +205,28 @@ void main()
 {
 	unsigned int read_address;  // read/write from/to this address
 	int* bram_address = (int*) 0x80000000;
-	int read_value, i;
+	int read_value, isa=0, i;
 	int size;
-        char isa[40];
 	int retval = 0;
 	int arch = 0;
-	int hart = 0;
-
-	isa[i++] = 'R';
-	isa[i++] = 'V';
-	isa[23] = '\0';
-	isa[24] = '\0';
-	isa[30] = '\0';
-
-	if(__riscv_xlen == 64 )
-	{
-		isa[i++] = '6';
-		isa[i++] = '4';
-	}else
-	{
-		isa[i++] = '3';
-		isa[i++] = '2';
-	}
 
 	asm volatile(
-	     "csrr %[arch], marchid\n"
-	     :
-	     [arch]
-	     "=r"
-	     (arch)
-	    );
+		     "csrr %[arch], marchid\n"
+		     :
+		     [arch]
+		     "=r"
+		     (arch)
+		    );
 
-	asm volatile(
-	     "csrr %[hart], mhartid\n"
-	     :
-	     [hart]
-	     "=r"
-	     (hart)
-	    );
+	printf("%s \n\nSHAKTI PROCESSORS \n\n",bootlogo);
 
-	asm volatile(
-	     "csrr %[retval], misa\n"
-	     :
-	     [retval]
-	     "=r"
-	     (retval)
-	    );
-
-	if (retval & 0x1)
-		isa[i++]='A';
-
-	if (retval & 0x2)
-		isa[i++]='B';
-
-	if (retval & 0x4)
-		isa[i++]='C';
-
-	if (retval & 0x8)
-		isa[i++]='D';
-
-	if (retval & 0x10)
-		isa[i++]='e';
-
-	if (retval & 0x20)
-		isa[i++]='F';
-
-	if (retval & 0x40)
-		isa[i++]='g';
-
-	if (retval & 0x80)
-		isa[i++]='h';
-
-	if (retval & 0x100)
-		isa[i++]='I';
-
-	if (retval & 0x200)
-		isa[i++]='j';
-
-/*
-	if (retval & 400)
-		isa[i++]='k';
-
-	if (retval &800)
-		isa[i++]='l';
-*/
-
-	if (retval & 0x1000)
-		isa[i++]='M';
-
-	if (retval & 0x2000)
-		isa[i++]='N';
-
-/*
-	if (retval & 4000)
-		isa[i++]='o';
-
-	if (retval & 8000)
-		isa[i++]='p';
-*/
-
-	if (retval & 0x10000)
-		isa[i++]='q';
-
-/*
-	if (retval & 20000)
-		isa[i++]='r';
-*/
-
-	if (retval & 0x40000)
-		isa[i++]='S';
-
-	/*
-	   if (retval & 80000)
-	   isa[i++]='t';
-	 */
-
-	if (retval & 0x100000)
-		isa[i++]='U';
-	isa[i]='\0';
-
-	printf("%s",bootlogo);
-	printf("Booting on Pinaka! hart %d\n",hart);
-	printf("Welcome to the world of Shakti !\n");
-	printf("Pinaka is a SoC build on top of Artix7 35T.\n");
-	printf("The core belongs to Shakti E class, 32 bit.\n");
-	printf("Supported ISA: %s.\n", isa);
-	printf("Processor Arch ID: %d.\n", arch);
+	printf("Booting on Parashu! hart 0 \n");
+	printf("Parashu is a SoC build on top of Artix7 35T.\n");
+	printf("The core belongs to Shakti E class, 32 bit.\n\n\n");
+	printf("Supported ISA: RV32IMACNU.\n");
+	printf("Processor Arch ID: %x.\n", arch);
 	printf("%s\n","Booting... vspi1.0\n");
+
 
 	spi_init();
 
@@ -394,7 +260,7 @@ void main()
 			if(i%1024 == 0)
 			{
 				printf(".");
-			       //printf("read address %x data:  %x      write address: %x data:  %x :: %d\n", read_address,read_value, bram_address, *(bram_address),i);
+				//printf("read address %x data:  %x      write address: %x data:  %x :: %d\n", read_address,read_value, bram_address, *(bram_address),i);
 			}
 		}
 	}

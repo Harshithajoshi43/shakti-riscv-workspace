@@ -17,12 +17,12 @@ create_dir:
 boot.riscv: create_dir 	
 	@echo -e "$(GREEN) Compiling BOOT Polling code $(NC)"
 	@echo -e "$(RED) Caveat: BOOT Code starts at 0x1000. Configure RTL appropriately $(NC)"
-	@riscv$(XLEN)-unknown-elf-gcc -g -mcmodel=medany -static -std=gnu99 -fno-builtin-printf  -c boot.c -o $(OUTPUT)/boot.o -march=rv$(XLEN)imac  -mabi=lp64 
-	@riscv$(XLEN)-unknown-elf-gcc -g -march=rv$(XLEN)imac  -mabi=lp64  -mcmodel=medany -static -std=gnu99 -fno-common -fno-builtin-printf -D__ASSEMBLY__=1 -c start.S -o $(OUTPUT)/start.o
-	@riscv$(XLEN)-unknown-elf-gcc -g -march=rv$(XLEN)imac   -mabi=lp64 -mcmodel=medany -static -std=gnu99 -fno-common -fno-builtin-printf  -c system.c -o $(OUTPUT)/system.shakti
-	@riscv$(XLEN)-unknown-elf-gcc -g -march=rv$(XLEN)imac -mabi=lp64 -T bootlink.ld  $(OUTPUT)/boot.o $(OUTPUT)/system.shakti $(OUTPUT)/start.o -o $(OUTPUT)/boot.shakti -static -nostartfiles 
+	@riscv$(XLEN)-unknown-elf-gcc -mcmodel=medany -static -std=gnu99 -fno-builtin-printf  -c boot.c -o $(OUTPUT)/boot.o -march=rv$(XLEN)imac  -mabi=lp64 
+	@riscv$(XLEN)-unknown-elf-gcc -march=rv$(XLEN)imac  -mabi=lp64  -mcmodel=medany -static -std=gnu99 -fno-common -fno-builtin-printf -D__ASSEMBLY__=1 -c start.S -o $(OUTPUT)/start.o
+	@riscv$(XLEN)-unknown-elf-gcc -march=rv$(XLEN)imac   -mabi=lp64 -mcmodel=medany -static -std=gnu99 -fno-common -fno-builtin-printf  -c system.c -o $(OUTPUT)/system.shakti
+	@riscv$(XLEN)-unknown-elf-gcc -march=rv$(XLEN)imac -mabi=lp64 -T bootlink.ld  $(OUTPUT)/boot.o $(OUTPUT)/system.shakti $(OUTPUT)/start.o -o $(OUTPUT)/boot.shakti -static -nostartfiles 
 	@riscv$(XLEN)-unknown-elf-objdump -D $(OUTPUT)/boot.shakti > $(OUTPUT)/boot.dump
-#	@elf2hex 8 2048 $(OUTPUT)/boot.shakti 4096 > $(OUTPUT)/boot.mem
+	@elf2hex 8 2048 $(OUTPUT)/boot.shakti 4096 > $(OUTPUT)/boot.mem
 
 clean: 
 	@rm -rf $(OUTPUT)

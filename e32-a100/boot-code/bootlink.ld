@@ -1,62 +1,63 @@
-/*======================================================================*/
-/* Proxy kernel linker script                                           */
-/*======================================================================*/
-/* This is the linker script used when building the proxy kernel. */
+/***************************************************************************
+ * Project           			:  shakti devt board
+ * Name of the file	     		:  link.ld
+ * Created date			        :   
+ * Brief Description of file    :   linker file
 
-/*----------------------------------------------------------------------*/
-/* Setup                                                                */
-/*----------------------------------------------------------------------*/
+ Copyright (C) 2020  IIT Madras. All rights reserved.
 
-/* The OUTPUT_ARCH command specifies the machine architecture where the
-   argument is one of the names used in the BFD library. More
-   specifically one of the entires in bfd/cpu-mips.c */
+// check LICENSE.iitm
+
+ ***************************************************************************/
 
 OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
-/*----------------------------------------------------------------------*/
-/* Sections                                                             */
-/*----------------------------------------------------------------------*/
-
 SECTIONS
 {
-
-  /* text: test code section */
   . = 0x1000;
+
   .text.init : { *(.text.init) }
 
   .text : { *(.text) }
 
-  /* data segment */
-  .data : { *(.data) }
+ .rodata : {
+       __rodata_start = .;
+       *(.rodata)
+       *(.rodata.*)
+       *(.gnu.linkonce.r.*)
+       __rodata_end = .;
+ }
+
+  .data : { 
+ . = ALIGN(4);
+     __data_start = .;
+     *(.data)
+     *(.data.*)
+     *(.gnu.linkonce.d.*)
+     __data_end = .;
+ }
 
   .sdata : {
     *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2) *(.srodata*)
     *(.sdata .sdata.* .gnu.linkonce.s.*)
   }
 
-  /* bss segment */
   .sbss : {
     *(.sbss .sbss.* .gnu.linkonce.sb.*)
     *(.scommon)
   }
-  .bss : { *(.bss) }
 
-  /* thread-local data segment */
-  .tdata :
-  {
-    _tls_data = .;
-    *(.tdata.begin)
-    *(.tdata)
-    *(.tdata.end)
-  }
-  .tbss :
-  {
-    *(.tbss)
-    *(.tbss.end)
-  }
+ .bss : {
+       . = ALIGN(4);
+       __bss_start = .;
+       *(.bss)
+       *(.bss.*)
+       *(.gnu.linkonce.b.*)
+       *(COMMON)
+       . = ALIGN(4);
+       __bss_end = .;
+    }
 
-  /* End of uninitalized data segement */
   _end = .;
 }
-

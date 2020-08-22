@@ -3,7 +3,7 @@
  * Name of the file	     		:  boot.c
  * Created date			        :  3.10.2019
  * Brief Description of file            :  boot code to copy bare metal appln 
-                                           from flash to physical memory.
+ from flash to physical memory.
 
  Copyright (C) 2019  IIT Madras. All rights reserved.
 
@@ -122,7 +122,6 @@ int spi_rxne_enable(){
 	return 1;
 }
 
-
 int flash_cmd_to_read(int command, int addr)
 {
 	int dr5;
@@ -183,21 +182,21 @@ int flash_device_id()
 	val1 = ( dr3 >> 16 ) & 0xff; //bitExtracted(dr3, 8, 17);
 	val2 = dr3 & 0xffff; //bitExtracted(dr3, 16, 1);
 
- 	printf("Device ID %x \n", val1);
- 	//printf("extracted device id %x \n",val2); 
+	printf("Device ID %x \n", val1);
+	//printf("extracted device id %x \n",val2); 
 
 	return 1;	
 }
 
 void jump_2_ram()
 {
-//	printf("\n%s\n","Control transferred to RAM");
+	//	printf("\n%s\n","Control transferred to RAM");
 	asm volatile("fence.i");
 	asm volatile( "li x30, 0x80000000" "\n\t"
-			"jr x30" "\n\t"
-			:
-			:
-			:"x30","cc","memory"
+		      "jr x30" "\n\t"
+		      :
+		      :
+		      :"x30","cc","memory"
 		    );
 }
 
@@ -205,101 +204,18 @@ void main()
 {
 	unsigned int read_address;  // read/write from/to this address
 	int* bram_address = (int*) 0x80000000;
-	int read_value, i=0;
+	int read_value, isa=0, i;
 	int size;
-        char isa[40] = {0};
 	int retval = 0;
 	int arch = 0;
 
-		asm volatile(
-	     "csrr %[arch], marchid\n"
-	     :
-	     [arch]
-	     "=r"
-	     (arch)
-	    );
-
 	asm volatile(
-	     "csrr %[retval], misa\n"
-	     :
-	     [retval]
-	     "=r"
-	     (retval)
-	     );
-	i = 0;
-
-	if (retval & 0x1)
-		isa[i++]='A';
-
-	if (retval & 0x2)
-		isa[i++]='B';
-
-	if (retval & 0x4)
-		isa[i++]='C';
-
-	if (retval & 0x8)
-		isa[i++]='D';
-
-	if (retval & 0x10)
-		isa[i++]='e';
-
-	if (retval & 0x20)
-		isa[i++]='F';
-
-	if (retval & 0x40)
-		isa[i++]='g';
-
-	if (retval & 0x80)
-		isa[i++]='h';
-
-	if (retval & 0x100)
-		isa[i++]='I';
-
-	if (retval & 0x200)
-		isa[i++]='j';
-
-/*
-	if (retval & 400)
-		isa[i++]='k';
-
-	if (retval &800)
-		isa[i++]='l';
-*/
-
-	if (retval & 0x1000)
-		isa[i++]='M';
-
-	if (retval & 0x2000)
-		isa[i++]='N';
-
-/*
-	if (retval & 4000)
-		isa[i++]='o';
-
-	if (retval & 8000)
-		isa[i++]='p';
-*/
-
-	if (retval & 0x10000)
-		isa[i++]='q';
-
-/*
-	if (retval & 20000)
-		isa[i++]='r';
-*/
-
-	if (retval & 0x40000)
-		isa[i++]='S';
-
-	/*
-	   if (retval & 80000)
-	   isa[i++]='t';
-	 */
-
-	if (retval & 0x100000)
-		isa[i++]='U';
-
-	isa[i]='\0';
+		     "csrr %[arch], marchid\n"
+		     :
+		     [arch]
+		     "=r"
+		     (arch)
+		    );
 
 	printf("%s \n\nSHAKTI PROCESSORS \n\n",bootlogo);
 
@@ -342,7 +258,7 @@ void main()
 			if(i%1024 == 0)
 			{
 				printf(".");
-			       //printf("read address %x data:  %x      write address: %x data:  %x :: %d\n", read_address,read_value, bram_address, *(bram_address),i);
+				//printf("read address %x data:  %x      write address: %x data:  %x :: %d\n", read_address,read_value, bram_address, *(bram_address),i);
 			}
 		}
 	}
