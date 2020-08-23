@@ -76,7 +76,7 @@ _start:
   # give each core 128KB of stack + TLS
   li sp, 0x3000
 
-  j main
+  j _init
 
 .section ".tdata.begin"
 .globl _tdata_begin
