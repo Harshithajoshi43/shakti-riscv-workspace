@@ -3,7 +3,7 @@
  * Name of the file	     		:  boot.c
  * Created date			        :  3.10.2019
  * Brief Description of file            :  boot code to copy bare metal appln 
- from flash to physical memory.
+                                           from flash to physical memory.
 
  Copyright (C) 2019  IIT Madras. All rights reserved.
 
@@ -80,7 +80,12 @@ int* spi_cr2 = (int*) SPI_CR2;
 int* spi_sr  = (int*) SPI_SR ;
 int* spi_dr1 = (int*) SPI_DR1 ;
 int* spi_dr2 = (int*) SPI_DR2 ;
+//int* spi_dr3  = (int*) SPI_DR3 ;
+//int* spi_dr4  = (int*) SPI_DR4 ;
 int* spi_dr5 = (int*) SPI_DR5 ;
+//int* spi_crcpr  = (int*) SPI_CRCPR;
+//int* spi_rxcrcr = (int*) SPI_RXCRCR;
+//int* spi_txcrcr = (int*) SPI_TXCRCR; 
 
 void set_spi(int* addr, int val)
 {
@@ -92,19 +97,20 @@ int get_spi(int* addr)
 	return *addr;
 }
 
-void spi_init()
-{
+void spi_init(){
 	set_spi(spi_cr1, (SPI_BR(7)|SPI_CPHA|SPI_CPOL));
-}
-
-void waitfor(unsigned int secs)
-{
-	unsigned int time = 0;
-	while(time++ < secs);
 }
 
 void spi_tx_rx_start(){
 	set_spi(spi_cr2, (SPI_RX_IMM_START));
+}
+
+void spi_enable(){
+	set_spi(spi_cr1, (SPI_BR(7)|SPI_TOTAL_BITS_TX(4)|SPI_TOTAL_BITS_RX(16)|SPI_SPE));
+}
+
+void spi_rx_enable(){
+	set_spi(spi_cr2, (SPI_RX_START));
 }
 
 int spi_rxne_enable(){
@@ -112,7 +118,7 @@ int spi_rxne_enable(){
 	int count = 0;
 
 	while (!(value & 0x1))
-	{
+{
 		waitfor(100);
 		value = get_spi(spi_sr);
 		if(count++ > 100)
@@ -121,6 +127,39 @@ int spi_rxne_enable(){
 
 	return 1;
 }
+
+#if 0
+int spi_notbusy(){
+	int value = 0x80;
+
+	while((value & 0x80)){
+		//		waitfor(10);
+		//		printf("\n Wait for busy");
+		value = get_spi(spi_sr);
+	}
+	return 1;
+}
+#endif
+
+void waitfor(unsigned int secs) {
+
+	unsigned int time = 0;
+
+	while(time++ < secs);
+}
+
+#if 0
+int flash_write_enable(){
+	//	printf("Cypress write enable \n");
+	set_spi(spi_dr1, 0x06000000);
+	set_spi(spi_dr5, 0x06);
+	set_spi(spi_cr1, (SPI_BR(7)|SPI_TOTAL_BITS_TX(8)|SPI_TOTAL_BITS_RX(0)|SPI_SPE|SPI_CPHA|SPI_CPOL));
+	//	waitfor(20000);
+	spi_notbusy();
+	//	waitfor(20000);
+	return 1;
+}
+#endif
 
 int flash_cmd_to_read(int command, int addr)
 {
@@ -137,11 +176,13 @@ int flash_cmd_to_read(int command, int addr)
 		dr5 = *spi_dr5;
 	}
 	return dr5;
+
 }
 
 int flash_read(int address)
 {
 	int read_value = flash_cmd_to_read(0x0c000000,address);
+
 	return read_value;
 }
 
@@ -159,6 +200,18 @@ int flash_cmd_read(int command)
 	}
 	return dr5;
 }
+
+int flash_status_register_read()
+{
+	int stat = 0x3;
+
+	while (stat & 0x03){
+		stat = flash_cmd_read(0x05000000);
+	}
+
+	return 0;
+}
+
 
 int flash_device_id()
 {
@@ -182,21 +235,22 @@ int flash_device_id()
 	val1 = ( dr3 >> 16 ) & 0xff; //bitExtracted(dr3, 8, 17);
 	val2 = dr3 & 0xffff; //bitExtracted(dr3, 16, 1);
 
-	printf("Device ID %x \n", val1);
-	//printf("extracted device id %x \n",val2); 
+ 	printf("Device ID %x \n", val1);
+ 	printf("extracted device id %x \n",val2); 
 
 	return 1;	
 }
 
-void jump_2_ram()
+void jumpToRAM()
 {
-	//	printf("\n%s\n","Control transferred to RAM");
+	printf("\n%s\n","Control transferred to RAM");
 	asm volatile("fence.i");
 	asm volatile( "li x30, 0x80000000" "\n\t"
-		      "jr x30" "\n\t"
-		      :
-		      :
-		      :"x30","cc","memory"
+			"jr x30" "\n\t"
+			:
+			:
+			:"x30","cc","memory"
+
 		    );
 }
 
@@ -204,7 +258,7 @@ void main()
 {
 	unsigned int read_address;  // read/write from/to this address
 	int* bram_address = (int*) 0x80000000;
-	int read_value, isa=0, i;
+	int read_value, i=0;
 	int size;
 	int retval = 0;
 	int arch = 0;
@@ -222,7 +276,7 @@ void main()
 	printf("Booting on Vajra! hart 0 \n");
 	printf("Vajra is a SoC build on top of Artix7 100T.\n");
 	printf("The core belongs to Shakti C class, 64 bit.\n\n\n");
-	printf("Supported ISA: RV64ACIMNSU.\n");
+	printf("Supported ISA: RV32IMACNSU.\n");
 	printf("Processor Arch ID: %x.\n", arch);
 	printf("%s\n","Booting... vspi1.0\n");
 
@@ -230,6 +284,7 @@ void main()
 
 	if(1 == flash_device_id() )
 	{
+
 		read_address = 0x00b00000;
 
 		size = flash_read(read_address);
@@ -246,19 +301,20 @@ void main()
 
 		for(i = 0; i < size;i++ )
 		{
+
 			read_value= flash_read(read_address);
 
 			*(bram_address) = read_value;
 
 			//printf("read address %x data:  %x      write address: %x data:  %x \n", read_address,read_value, bram_address, *(bram_address));
-
+			
 			read_address = read_address+4;
 			bram_address++;
-
+			
 			if(i%1024 == 0)
 			{
 				printf(".");
-				//printf("read address %x data:  %x      write address: %x data:  %x :: %d\n", read_address,read_value, bram_address, *(bram_address),i);
+			       //printf("read address %x data:  %x      write address: %x data:  %x :: %d\n", read_address,read_value, bram_address, *(bram_address),i);
 			}
 		}
 	}
@@ -269,7 +325,7 @@ void main()
 		asm volatile ("ebreak");
 	}
 
-	jump_2_ram();
+	jumpToRAM();
 
 	asm volatile ("ebreak");
 }
