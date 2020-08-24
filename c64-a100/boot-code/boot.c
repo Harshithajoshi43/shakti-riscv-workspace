@@ -277,7 +277,7 @@ void main()
 	printf("Booting on Vajra! hart 0 \n");
 	printf("Vajra is a SoC build on top of Artix7 100T.\n");
 	printf("The core belongs to Shakti C class, 64 bit.\n\n\n");
-	printf("Supported ISA: RV32IMACNSU.\n");
+	printf("Supported ISA: RV64IMACSU.\n");
 	printf("Processor Arch ID: %x.\n", arch);
 
 	spi_init();

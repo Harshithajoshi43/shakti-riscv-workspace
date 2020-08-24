@@ -277,7 +277,7 @@ void main()
 	printf("Booting on Pinaka! hart 0 \n");
 	printf("Pinaka is a SoC build on top of Artix7 35T.\n");
 	printf("The core belongs to Shakti E class, 32 bit.\n\n\n");
-	printf("Supported ISA: RV32IMACNSU.\n");
+	printf("Supported ISA: RV32IMACNU.\n");
 	printf("Processor Arch ID: %x.\n", arch);
 
 	spi_init();
