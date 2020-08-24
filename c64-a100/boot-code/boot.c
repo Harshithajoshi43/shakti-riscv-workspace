@@ -7,18 +7,7 @@
 
  Copyright (C) 2019  IIT Madras. All rights reserved.
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// check LICENSE.iitm
 
  ***************************************************************************/
 
@@ -269,11 +258,27 @@ void main()
 {
 	unsigned int read_address;  // read/write from/to this address
 	int* bram_address = (int*) 0x80000000;
-	int read_value, i;
+	int read_value, i=0;
 	int size;
+	int retval = 0;
+	int arch = 0;
 
-	printf("%s",bootlogo);
-	printf("%s\n","Booting... vspi0.2\n");
+	asm volatile(
+		     "csrr %[arch], marchid\n"
+		     :
+		     [arch]
+		     "=r"
+		     (arch)
+		    );
+
+	printf("%s\n\nSHAKTI PROCESSORS \n\n",bootlogo);
+	printf("%s\n","Booting... vspi1.0\n");
+
+	printf("Booting on Vajra! hart 0 \n");
+	printf("Vajra is a SoC build on top of Artix7 100T.\n");
+	printf("The core belongs to Shakti C class, 64 bit.\n\n\n");
+	printf("Supported ISA: RV64IMACSU.\n");
+	printf("Processor Arch ID: %x.\n", arch);
 
 	spi_init();
 
