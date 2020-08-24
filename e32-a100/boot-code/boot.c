@@ -271,14 +271,14 @@ void main()
 		     (arch)
 		    );
 
-	printf("%s \n\nSHAKTI PROCESSORS \n\n",bootlogo);
+	printf("%s\n\nSHAKTI PROCESSORS \n\n",bootlogo);
+	printf("%s\n","Booting... vspi1.0\n");
 
 	printf("Booting on Parashu! hart 0 \n");
 	printf("Parashu is a SoC build on top of Artix7 100T.\n");
 	printf("The core belongs to Shakti E class, 32 bit.\n\n\n");
 	printf("Supported ISA: RV32IMACNSU.\n");
 	printf("Processor Arch ID: %x.\n", arch);
-	printf("%s\n","Booting... vspi1.0\n");
 
 	spi_init();
 
