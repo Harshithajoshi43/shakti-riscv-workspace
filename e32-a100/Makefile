@@ -1,5 +1,4 @@
 ## 			Makefile for E-Class on Arty-A7
-
 ifeq (, $(wildcard ./old_vars))
 	old_define_macros = ""
 else
@@ -25,6 +24,7 @@ export SHAKTI_HOME
 TOP_MODULE:=mkSoc
 TOP_FILE:=Soc.bsv
 TOP_DIR:=./
+BSVOUTDIR:=bin
 WORKING_DIR := $(shell pwd)
 Vivado_loc=$(shell which vivado || which vivado_lab)
 
@@ -116,6 +116,18 @@ COMMON_VERILOG:=./common_verilog/
 BSVINCDIR:=.:%/Prelude:%/Libraries:%/Libraries/BlueNoC:$(CORE):$(M_EXT):$(FABRIC):$(PERIPHERALS):$(COMMON_BSV):$(COMMON_VERILOG)
 # ------------------------------------------------------------------------------------------------ #
 
+# ----------------- Setting up flags for verilator ----------------------------------------------- #
+VERILATOR_FLAGS += --stats -O3 $(verilate_fast) -LDFLAGS "-static" --x-assign fast --x-initial fast \
+--noassert sim_main.cpp --bbox-sys -Wno-STMTDLY -Wno-UNOPTFLAT -Wno-WIDTH \
+-Wno-lint -Wno-COMBDLY -Wno-INITIALDLY --autoflush $(coverage) $(trace) --threads $(THREADS) \
+-DBSV_RESET_FIFO_HEAD -DBSV_RESET_FIFO_ARRAY -DBSV_ASYNC_RESET
+VCS_MACROS =  +define+BSV_RESET_FIFO_HEAD=True +define+BSV_RESET_FIFO_ARRAY=True
+
+ifeq (enable,$(VERBOSITY))
+	VERILATOR_FLAGS += -DVERBOSE
+	VCS_MACROS += +define+VERBOSE=True
+endif
+# ------------------------------------------------------------------------------------------------ #
 
 # ---------------- Setting the variables for bluespec compile  --------------------------------- #
 BSC_CMD:= bsc -u -verilog -elab 
@@ -224,6 +236,17 @@ program_mcs: ## Program the FPGA Configuration Memory in order to use the onboar
 	echo "After programming reset the device once and run \"sudo openocd \
 	-f shakti-arty.cfg\" to start a gdb server at localhost:3333 "
 
+.PHONY: link_verilator
+link_verilator: ## Generate simulation executable using Verilator
+	@echo "Linking $(TOP_MODULE) using verilator"
+	@mkdir -p $(BSVOUTDIR) obj_dir
+	@echo "#define TOPMODULE V$(TOP_MODULE)" > sim_main.h
+	@echo '#include "V$(TOP_MODULE).h"' >> sim_main.h
+	verilator $(VERILATOR_FLAGS) --cc $(TOP_MODULE).v -y $(VERILOGDIR) -y common_verilog --exe
+	@ln -f -s sim_main.cpp obj_dir/sim_main.cpp
+	@ln -f -s sim_main.h obj_dir/sim_main.h
+	@make -j8 -C obj_dir -f V$(TOP_MODULE).mk
+	@cp obj_dir/V$(TOP_MODULE) $(BSVOUTDIR)/out
 
 .PHONY: clean-bsv
 clean-bsv: ## clean bsv build director

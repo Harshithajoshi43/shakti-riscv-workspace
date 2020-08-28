@@ -57,7 +57,11 @@ package Soc;
   import gpio :: *;
   import bram :: *;
   import debug_types::*;     
+`ifdef bscan2e
   import xilinxdtm::*;
+`else
+  import jtagdtm :: * ;
+`endif
   import riscvDebug013::*;                                                                        
   import debug_halt_loop::*;
   import debug_types::*;
@@ -73,6 +77,8 @@ package Soc;
     else if(addr >= `DebugBase && addr <= `DebugEnd)
       slave_num = `Debug_slave_num;
     else if(addr >= `SlowBase && addr <= `SlowEnd)
+      slave_num = `Slow_fabric_slave_num;
+    else if (addr >= `PLICBase && addr <= `PLICEnd)
       slave_num = `Slow_fabric_slave_num;
     else
       slave_num = `FastErr_slave_num;
