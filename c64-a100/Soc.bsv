@@ -74,6 +74,8 @@ package Soc;
       slave_num = `Debug_slave_num;
     else if(addr >= `SlowBase && addr <= `SlowEnd)
       slave_num = `Slow_fabric_slave_num;
+    else if(addr >= `PLICBase && addr <= `PLICEnd)
+      slave_num = `Slow_fabric_slave_num;
     else
       slave_num = `FastErr_slave_num;
       

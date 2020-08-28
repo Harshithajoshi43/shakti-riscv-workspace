@@ -116,6 +116,7 @@ package xilinxdtm;
             capture_repsonse_from_dm<=True;
           end
           rg_packet <= packet[40:0];
+          dmistat <= 2'b11;
         end
       end
       srg_mdr <= 0;
@@ -141,14 +142,15 @@ package xilinxdtm;
         end
         else if(capture_repsonse_from_dm) begin
           response_status<=3;
-          capture_frame[43:0] = {rg_packet[40:0],3'b000};
+          dmistat<=2'b11;
+          capture_frame[43:0] = {rg_packet[40:2],2'b11,3'b000};
         end
         else begin
-          capture_frame[43:0] = {rg_packet[40:0],3'b000};
+          capture_frame[43:0] = {rg_packet[40:2],2'b00,3'b000};
         end
       end 
       else begin
-        capture_frame[43:0] = {rg_packet[40:0],3'b000};
+        capture_frame[43:0] = {rg_packet[40:2],2'b00,3'b000};
       end
       srg_mdr <= capture_frame;
     endrule
