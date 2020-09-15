@@ -712,7 +712,7 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
 
 xadc_wiz_0 xadc_wiz_inst (
         .s_axi_aclk      (core_clk),
-        .s_axi_aresetn   (soc_reset),
+        .s_axi_aresetn   (~soc_reset),
         .s_axi_awaddr    (xadc_master_awaddr),
         .s_axi_awvalid   (xadc_master_awvalid),
         .s_axi_awready   (xadc_master_m_awready_awready),
