@@ -1,8 +1,8 @@
-#######################
-HW Grand Challenge 2020
-#######################
+#######################################
+SWADESHI MICROPROCESSORS CHALLENGE 2020
+#######################################
 
-This repo contains 3 major SoCs that can be used by participants of the HW GC-2020
+This repo contains 3 major SoCs that can be used by participants of the `SWADESHI MICROPROCESSORS CHALLENGE 2020 <https://innovate.mygov.in/swadeshi-microprocessor-challenge/>`_
 
 The summary of the 3 Socs is present below. Details of each is available in the README of the
 respective folders.
