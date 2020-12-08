@@ -46,6 +46,7 @@ E32-A100 (Parashu)
 - Arduino compatible pin assignments
 - Core local interrupt controler (CLINT)
 - JTAG based debugger
+- Ethernet lite from Xilinx
 
 C64-A100 (Vajra)
 ^^^^^^^^^^^^^^^^
@@ -66,4 +67,5 @@ C64-A100 (Vajra)
 - Arduino compatible pin assignments
 - Core local interrupt controler (CLINT)
 - JTAG based debugger
+- Ethernet lite from Xilinx
 
