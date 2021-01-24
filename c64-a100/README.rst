@@ -133,7 +133,7 @@ To Build MCS File:
 .. code-block:: shell-session
 
   $ git clone https://gitlab.com/shaktiproject/gc2020.git
-  $ cd c64-a100/
+  $ cd gc2020/c64-a100/
   $ pip3 install -r requirements.txt
   $ python3 -m configure.main
   $ make -j<jobs> generate_verilog
