@@ -134,7 +134,7 @@ To Build MCS File:
 .. code-block:: shell-session
 
   $ git clone https://gitlab.com/shaktiproject/gc2020.git
-  $ cd e32-a35/
+  $ cd gc2020/e32-a35/
   $ make generate_verilog generate_boot_files ip_build arty_build generate_mcs program_mcs JOBS=<jobs>
 
 Connecting to the Target
