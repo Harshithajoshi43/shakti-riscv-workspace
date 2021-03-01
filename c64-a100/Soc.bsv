@@ -96,6 +96,8 @@ package Soc;
       slave_num = `MixedCluster_slave_num;
     else if(addr >= `BootBase && addr <= `BootEnd)
       slave_num = `Boot_slave_num;
+    else if (addr >= `EthBase && addr <= `EthEnd)
+      slave_num = `Eth_slave_num;
     else
       slave_num = `Err_slave_num;
       
@@ -110,6 +112,7 @@ package Soc;
 		method I2C_out i2c1_out;									//I2c IO interface
     (*always_ready, always_enabled*)
     interface AXI4_Lite_Master_IFC#(`paddr, 32, 0) xadc_master;
+    interface AXI4_Lite_Master_IFC#(`paddr, 32, 0) eth_master;
     interface AXI4_Master_IFC#(`paddr, ELEN, 0) mem_master;
     interface IOCellSide iocell_io;
     (*always_enabled,always_ready*)
@@ -261,7 +264,7 @@ package Soc;
     method Bit#(1) wire_tdo;                                                            
     // ---------------------------------------------//
     (*always_ready, always_enabled*)
-    method Action ext_interrupts(Bit#(2) i);
+    method Action ext_interrupts(Bit#(3) i);
   `ifdef rtldump
     interface Get#(DumpType) io_dump;
   `endif
@@ -288,7 +291,7 @@ package Soc;
     Ifc_mixed_cluster mixed_cluster <- mkmixed_cluster;
     Ifc_err_slave_axi4lite#(`paddr,32,0) err_slave <- mkerr_slave_axi4lite;
     Ifc_bram_axi4lite#(`paddr, 32, 0,  13) boot <- mkbram_axi4lite('h1000, "boot.mem","Boot");
-    Wire#(Bit#(2)) wr_ext_interrupts <- mkWire();
+    Wire#(Bit#(3)) wr_ext_interrupts <- mkWire();
 
     Wire#(Bit#(1)) wr_gpio4_in <- mkDWire(0);
     Wire#(Bit#(1)) wr_gpio7_in <- mkDWire(0);
@@ -335,9 +338,7 @@ package Soc;
     // synFIFOs to transact data between JTAG and debug module                                                                                                    
     SyncFIFOIfc#(Bit#(41)) sync_request_to_dm <-mkSyncFIFOToCC(1,tck_clk,trst);                     
     SyncFIFOIfc#(Bit#(34)) sync_response_from_dm <-mkSyncFIFOFromCC(1,tck_clk);                     
-                           
-		Wire#(Bit#(8)) wr_external_interrupts <- mkDWire('d0);
-             // ----------- Connect JTAG IOs through null-crossing registers ------ //
+    // ----------- Connect JTAG IOs through null-crossing registers ------ //
     rule assign_jtag_inputs;                                                                                
       jtag_tap.tms_i(tms.crossed);                                                                  
       jtag_tap.tdi_i(tdi.crossed);                                                                  
@@ -385,7 +386,7 @@ package Soc;
 		endrule
 
     rule connect_interrupt_lines;
-      mixed_cluster.interrupts({uart_cluster.uart_interrupts, pwm_cluster.pwm0_sb_interrupt, 
+      mixed_cluster.interrupts({wr_ext_interrupts, uart_cluster.uart_interrupts, pwm_cluster.pwm0_sb_interrupt, 
                                                   pwm_cluster.pwm1_sb_interrupt, 
                                                   pwm_cluster.pwm2_sb_interrupt, 
                                                   pwm_cluster.pwm3_sb_interrupt, 
@@ -646,8 +647,9 @@ package Soc;
 		method  i2c1_out = mixed_cluster.i2c1_out;									//I2c IO interface
     interface iocell_io = mixed_cluster.pinmuxtop_iocell_side;						//GPIO IO interface
     interface xadc_master = mixed_cluster.xadc_master;
+    interface eth_master = slow_fabric.v_to_slaves[`Eth_slave_num];
     interface mem_master = fabric.v_to_slaves [`Memory_slave_num];
-    method Action ext_interrupts(Bit#(2) i);
+    method Action ext_interrupts(Bit#(3) i);
       wr_ext_interrupts <= i;
     endmethod
   `ifdef rtldump

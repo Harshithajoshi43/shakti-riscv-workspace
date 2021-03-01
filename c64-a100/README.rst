@@ -26,6 +26,7 @@ GPIO     'h0004_0100   'h0004_01FF
 XADC     'h0004_1000   'h0004_13FF
 I2C1     'h0004_1400   'h0004_14FF
 PinMux   'h0004_1500   'h0004_15FF
+Ethernet 'h0004_4000   'h0004_7FFF
 Clint    'h0200_0000   'h020B_FFFF
 PLIC     'h0C00_0000   'h0C01_001F
 =======  ============  =============
@@ -125,7 +126,9 @@ The debug interface of the processor is connected to the Xilinx JTAG tap, which 
 multiplexed with uart0, and is connected to the micro-USB port. This configuration let’s us to 
 not have dedicated JTAG pins, thereby eliminating the need for an external JTAG Debug probe (like J-Link).
 
-The DDR controller (of Xilinx) uses the default pin configuration as specified by Xilinx.
+The DDR controller (of Xilinx) uses the default pin configuration as specified by Digilent.
+
+The Ethernet controller (of Xilinx) uses the default ping configuraion as specified by Digilent
 
 To Build MCS File:
 ^^^^^^^^^^^^^^^^^

@@ -45,6 +45,23 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
   output        ddr3_cs_n,
   output [1:0]  ddr3_dm,
   output        ddr3_odt,
+  
+  // ethernet ports
+  input phy_tx_clk,
+  input phy_rx_clk,
+  input phy_crs,
+  input phy_dv,
+  input [3:0]phy_rx_data,
+  input phy_col,
+  input phy_rx_er,
+  output phy_rst_n,
+  output phy_tx_en,
+  output [3:0]phy_tx_data,
+  output phy_ref_clk,
+//  input phy_mdio_i,
+//  output phy_mdio_o,
+  output phy_mdio_t,
+  output phy_mdc,
   // ---- JTAG ports ------- //
    // ---- UART ports --------//
     input         uart0_SIN,
@@ -103,8 +120,6 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
     inout gpio_30,
     inout gpio_31,
 
-    // ---- External interrupts ports --------//
-    input [1:0] interrupts,
 
     // ---- System Reset ------//
     input         sys_rst,	//Active Low
@@ -137,14 +152,14 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
 
   reg aresetn ;
 
-   wire                            soc_reset;      // reset to the SoC
-   wire                            core_clk;       // clock to the SoC
+  wire                            soc_reset;      // reset to the SoC
+  wire                            core_clk;       // clock to the SoC
   wire                              ddr3_main;      // main clock to the ddr3-mig
   wire                              ddr3_ref;       // reference clock to dr3 mig
-   wire                            locked;         // indicates pll is stable
+  wire                            locked;         // indicates pll is stable
   wire                              clk;            // mig ui clk            
   wire                              rst;            // mig ui reset
-   wire                            mmcm_locked;    // indicates the ui clock from mig is stable
+  wire                            mmcm_locked;    // indicates the ui clock from mig is stable
   // Signals driven by axi converter to DDR slave ports
   wire [AXI_ID_WIDTH-1:0]           m_axi_awid;
   wire [AXI_ADDR_WIDTH-1:0]         m_axi_awaddr;
@@ -218,7 +233,7 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
   wire                              s_axi_rlast;
   wire                              s_axi_rvalid;   
   wire [11:0]                       device_temp; 
-
+  wire [1:0]                         interrupts;
 
    wire i2c0_scl_out, i2c0_scl_in, i2c0_scl_out_en;
    wire i2c0_sda_out, i2c0_sda_in, i2c0_sda_out_en;
@@ -259,7 +274,7 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
    wire gpio_30_in, gpio_30_out, gpio_30_en;
    wire gpio_31_in, gpio_31_out, gpio_31_en;
 
-
+   wire ip2intc_irpt;
 // ---------------------------------------------------------------------------- //
     wire wire_tck_clk;
     wire wire_trst;
@@ -307,6 +322,24 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
     wire [1 : 0] xadc_master_m_rvalid_rresp;
     wire [32-1 : 0] xadc_master_m_rvalid_rdata;
     wire xadc_master_rready;
+   // ETH Axi4-Lite Slave
+    wire eth_master_awvalid;
+    wire [13-1 : 0] eth_master_awaddr;
+    wire eth_master_m_awready_awready;
+    wire eth_master_wvalid;
+    wire [32-1 : 0] eth_master_wdata;
+    wire [(32/8)-1 : 0] eth_master_wstrb;
+    wire eth_master_m_wready_wready;
+    wire eth_master_m_bvalid_bvalid;
+    wire [1:0] eth_master_m_bvalid_bresp;
+    wire eth_master_bready;
+    wire eth_master_arvalid;
+    wire [13-1 : 0] eth_master_araddr;
+    wire eth_master_m_arready_arready;
+    wire eth_master_m_rvalid_rvalid;
+    wire [1 : 0] eth_master_m_rvalid_rresp;
+    wire [32-1 : 0] eth_master_m_rvalid_rdata;
+    wire eth_master_rready;
   // --------- Address width truncation and Reset generation for SoC ------------ //
   wire [31:0] temp_s_axi_awaddr, temp_s_axi_araddr;
   assign s_axi_awaddr= temp_s_axi_awaddr [AXI_ADDR_WIDTH-1:0];
@@ -331,6 +364,7 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
                        .clk_out1(core_clk),
                     .clk_out2(ddr3_main),
                     .clk_out3(ddr3_ref),
+                    .clk_out4(phy_ref_clk),
     .resetn   (1'b1), 
     .locked   (locked)
   );
@@ -621,6 +655,25 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
     	  .iocell_io_io18_cell_outen(io18_cell_en),
     	  .iocell_io_io19_cell_outen(io19_cell_en),
     	  .iocell_io_io20_cell_outen(io20_cell_en),
+        
+        // ETH connection
+        .eth_master_awvalid(eth_master_awvalid),
+        .eth_master_awaddr(eth_master_awaddr),
+        .eth_master_m_awready_awready(eth_master_m_awready_awready),
+        .eth_master_wvalid(eth_master_wvalid),
+        .eth_master_wdata(eth_master_wdata),
+        .eth_master_wstrb(eth_master_wstrb),
+        .eth_master_m_wready_wready(eth_master_m_wready_wready),
+        .eth_master_m_bvalid_bvalid(eth_master_m_bvalid_bvalid),
+        .eth_master_m_bvalid_bresp(eth_master_m_bvalid_bresp),
+        .eth_master_bready(eth_master_bready),
+        .eth_master_arvalid(eth_master_arvalid),
+        .eth_master_araddr(eth_master_araddr),
+        .eth_master_m_arready_arready(eth_master_m_arready_arready),
+        .eth_master_m_rvalid_rvalid(eth_master_m_rvalid_rvalid),
+        .eth_master_m_rvalid_rresp(eth_master_m_rvalid_rresp),
+        .eth_master_m_rvalid_rdata(eth_master_m_rvalid_rdata),
+        .eth_master_rready(eth_master_rready),
 
         // XADC connection
         .xadc_master_awvalid(xadc_master_awvalid),
@@ -706,8 +759,46 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
         .gpio_30_outen(gpio_30_en),
         .gpio_31_outen(gpio_31_en),
 
-        .ext_interrupts_i(interrupts)
+        .ext_interrupts_i({ip2intc_irpt,interrupts})
    );
+
+axi_ethernetlite_0 eth10 (
+  .s_axi_aclk(core_clk),        // input wire s_axi_aclk
+  .s_axi_aresetn(~soc_reset),  // input wire s_axi_aresetn
+  .ip2intc_irpt(eth10_ip2intc_irpt),    // output wire ip2intc_irpt
+  .s_axi_awaddr    (eth_master_awaddr),
+  .s_axi_awvalid   (eth_master_awvalid),
+  .s_axi_awready   (eth_master_m_awready_awready),
+  .s_axi_wdata     (eth_master_wdata),
+  .s_axi_wstrb     (eth_master_wstrb),
+  .s_axi_wvalid    (eth_master_wvalid),
+  .s_axi_wready    (eth_master_m_wready_wready),
+  .s_axi_bresp     (eth_master_m_bvalid_bresp),
+  .s_axi_bvalid    (eth_master_m_bvalid_bvalid),
+  .s_axi_bready    (eth_master_bready),
+  .s_axi_araddr    (eth_master_araddr),
+  .s_axi_arvalid   (eth_master_arvalid),
+  .s_axi_arready   (eth_master_m_arready_arready),
+  .s_axi_rdata     (eth_master_m_rvalid_rdata),
+  .s_axi_rresp     (eth_master_m_rvalid_rresp),
+  .s_axi_rvalid    (eth_master_m_rvalid_rvalid),
+  .s_axi_rready    (eth_master_rready),
+  .phy_tx_clk(phy_tx_clk),        // input wire phy_tx_clk
+  .phy_rx_clk(phy_rx_clk),        // input wire phy_rx_clk
+  .phy_crs(phy_crs),              // input wire phy_crs
+  .phy_dv(phy_dv),                // input wire phy_dv
+  .phy_rx_data(phy_rx_data),      // input wire [3 : 0] phy_rx_data
+  .phy_col(phy_col),              // input wire phy_col
+  .phy_rx_er(phy_rx_er),          // input wire phy_rx_er
+  .phy_rst_n(phy_rst_n),          // output wire phy_rst_n
+  .phy_tx_en(phy_tx_en),          // output wire phy_tx_en
+  .phy_tx_data(phy_tx_data),      // output wire [3 : 0] phy_tx_data
+  .phy_mdio_i(phy_mdio_i),        // input wire phy_mdio_i
+  .phy_mdio_o(phy_mdio_o),        // output wire phy_mdio_o
+  .phy_mdio_t(phy_mdio_t),        // output wire phy_mdio_t
+  .phy_mdc(phy_mdc)              // output wire phy_mdc
+);
+
    // --- Instantiating XADC -------------------------//
 
 xadc_wiz_0 xadc_wiz_inst (
@@ -750,9 +841,12 @@ xadc_wiz_0 xadc_wiz_inst (
         .vauxn15 (vauxn15),
         .vp_in (vp_in),
         .vn_in (vn_in),
-        .temp_out(device_temp)            // output wire [11 : 0] temp_out
+        .temp_out(device_temp),            // output wire [11 : 0] temp_out
+        .ip2intc_irpt(xadc_ip2intc_irpt)
 
           );
+
+  assign interrupts = {eth10_ip2intc_irpt, xadc_ip2intc_irpt};
 
 /*   // ---- Instantiating the C-class SoC -------------//
    genvar index;

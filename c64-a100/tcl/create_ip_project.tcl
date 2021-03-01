@@ -34,6 +34,7 @@ source $home_dir/tcl/create_clock_div.tcl
 source $home_dir/tcl/create_mig.tcl
 source $home_dir/tcl/create_proc_reset.tcl
 source $home_dir/tcl/create_xadc.tcl
+source $home_dir/tcl/create_ethlite.tcl
 
 # capture all runs except the default synth_1
 set run_list [get_runs *_synth_1]

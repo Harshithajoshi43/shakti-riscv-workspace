@@ -32,7 +32,10 @@ set_property -dict [list \
                         CONFIG.CLKOUT2_USED {1} \
                         CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {200.000} \
                         CONFIG.CLKOUT3_DRIVES {BUFG} \
-                        CONFIG.CLKOUT3_USED {1} ] [get_ips clk_divider]
+                        CONFIG.CLKOUT3_USED {1} \
+                        CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {25.000} \
+                        CONFIG.CLKOUT4_DRIVES {BUFG} \
+                        CONFIG.CLKOUT4_USED {1} ] [get_ips clk_divider]
 
 generate_target {instantiation_template} [get_ips clk_divider]
 create_ip_run [get_ips clk_divider]
