@@ -55,6 +55,7 @@ if { $jtag_type eq "JTAG_EXTERNAL" } {
 import_ip $ip_project_dir/manage_ip.srcs/sources_1/ip/clk_divider/clk_divider.xci
 import_ip $ip_project_dir/manage_ip.srcs/sources_1/ip/clk_converter/clk_converter.xci
 import_ip $ip_project_dir/manage_ip.srcs/sources_1/ip/mig_ddr3/mig_ddr3.xci
+import_ip $ip_project_dir/manage_ip.srcs/sources_1/ip/axi_ethernetlite_0/axi_ethernetlite_0.xci
 import_ip $ip_project_dir/manage_ip.srcs/sources_1/ip/proc_sys_reset_0/proc_sys_reset_0.xci
 import_ip $ip_project_dir/manage_ip.srcs/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xci
 
