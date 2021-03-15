@@ -35,6 +35,7 @@ source $home_dir/tcl/create_clock_div.tcl
 source $home_dir/tcl/create_mig.tcl
 source $home_dir/tcl/create_proc_reset.tcl
 source $home_dir/tcl/create_xadc.tcl
+source $home_dir/tcl/create_ethlite.tcl
 
 # Create the multiplier IP only if "M" extension is present
 if {[string first "M" $isa] != -1} {
