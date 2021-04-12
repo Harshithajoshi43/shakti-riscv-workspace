@@ -45,9 +45,11 @@ import  BUtils            ::*;
 import  Semi_FIFOF       ::*;
 import  Clocks::*;
 import  FIFO::*;
+import  Vector :: * ;
 `include "i2c.defs"
 `include "Logger.bsv"
 
+`define sda_delay 10
 
 typedef union tagged {
   void Dead;
@@ -167,6 +169,7 @@ endfunction
       Reg#(Bit#(1))               val_SCL_in     <-  mkReg(1);
       Reg#(Bit#(1))               val_SDA        <-  mkReg(1);                    // SDA value that is sent through the inout pin using tristate
       Reg#(Bit#(1))               val_SDA_in     <- mkReg(1);
+      Vector#(`sda_delay, Reg#(Bit#(1)))   val_sda_delay   <- replicateM(mkReg(0));
       Reg#(Bool)                  dOutEn         <-  mkReg(False);                 // Data out Enable for the SDA Tristate Buffer
       Reg#(Bool)                  cOutEn         <-  mkReg(False);                 // Data out Enable for the SCL Tristate Buffer
 
@@ -278,6 +281,14 @@ endfunction
 
       //Module Instantiations
       //AXI4_Lite_Slave_Xactor_IFC #(`PADDR, `Reg_width, `USERSPACE)  s_xactor <- mkAXI4_Lite_Slave_Xactor;
+
+      /*doc:rule: */
+      rule rl_delay_sda;
+        for (Integer i = 1; i<`sda_delay; i = i + 1) begin
+          val_sda_delay[i] <= val_sda_delay[i-1];
+        end
+        val_sda_delay[0] <= val_SDA;
+      endrule
 
 
       //Function to access Registers
@@ -792,7 +803,7 @@ endfunction
             return (cOutEn && eso == 1'b1);
         endmethod
         method Bit#(1) sda_out;
-            return val_SDA;
+            return val_sda_delay[`sda_delay-1];
         endmethod
         method Action sda_in(Bit#(1) in);
             val_SDA_in <= in;
