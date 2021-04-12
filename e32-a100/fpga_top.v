@@ -60,7 +60,8 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
   output phy_ref_clk,
 //  input phy_mdio_i,
 //  output phy_mdio_o,
-  output phy_mdio_t,
+  inout phy_mdio,
+//  output phy_mdio_t,
   output phy_mdc,
   // ---- JTAG ports ------- //
    // ---- UART ports --------//
@@ -234,6 +235,8 @@ module fpga_top#( parameter AXI_ID_WIDTH = 4, parameter AXI_ADDR_WIDTH = 28)
   wire                              s_axi_rvalid;   
   wire [11:0]                       device_temp; 
   wire [1:0]                         interrupts;
+
+   wire phy_mdio_o, phy_mdio_i, phy_mdio_t;
 
    wire i2c0_scl_out, i2c0_scl_in, i2c0_scl_out_en;
    wire i2c0_sda_out, i2c0_sda_in, i2c0_sda_out_en;
@@ -862,6 +865,14 @@ xadc_wiz_0 xadc_wiz_inst (
       end
    endgenerate*/
 //---- IOBUF FOR I2C -----//
+   IOBUF eth_mdio_inst(
+             .O(phy_mdio_i),
+             .IO(phy_mdio),
+             .I(phy_mdio_o),
+             .T(~phy_mdio_t)
+         );
+
+
    IOBUF i2c0_scl_inst(
              .O(i2c0_scl_in),
              .IO(i2c0_scl),
