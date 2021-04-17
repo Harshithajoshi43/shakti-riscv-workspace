@@ -171,6 +171,7 @@ endfunction
       Reg#(Bit#(1))               val_SDA_in     <- mkReg(1);
       Vector#(`sda_delay, Reg#(Bit#(1)))   val_sda_delay   <- replicateM(mkReg(0));
       Reg#(Bool)                  dOutEn         <-  mkReg(False);                 // Data out Enable for the SDA Tristate Buffer
+      Vector#(`sda_delay, Reg#(Bool))      dOutEn_delay    <- replicateM(mkReg(False));                 // Data out Enable for the SDA Tristate Buffer
       Reg#(Bool)                  cOutEn         <-  mkReg(False);                 // Data out Enable for the SCL Tristate Buffer
 
       Reg#(Bit#(8))              cprescaler     <-  mkReg(0);                    // Prescaler Counter for the Chip clock
@@ -286,8 +287,10 @@ endfunction
       rule rl_delay_sda;
         for (Integer i = 1; i<`sda_delay; i = i + 1) begin
           val_sda_delay[i] <= val_sda_delay[i-1];
+          dOutEn_delay[i] <= dOutEn_delay[i-1];
         end
         val_sda_delay[0] <= val_SDA;
+        dOutEn_delay[0] <= dOutEn;
       endrule
 
 
@@ -809,7 +812,7 @@ endfunction
             val_SDA_in <= in;
         endmethod
         method Bool sda_out_en;
-            return (dOutEn && eso == 1'b1);
+            return (dOutEn_delay[`sda_delay-1] && eso == 1'b1);
         endmethod
       endinterface
 
