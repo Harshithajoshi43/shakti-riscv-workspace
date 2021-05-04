@@ -869,7 +869,7 @@ xadc_wiz_0 xadc_wiz_inst (
              .O(phy_mdio_i),
              .IO(phy_mdio),
              .I(phy_mdio_o),
-             .T(~phy_mdio_t)
+             .T(phy_mdio_t)
          );
 
 
