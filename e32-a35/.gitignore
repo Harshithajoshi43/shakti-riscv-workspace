@@ -1,6 +1,5 @@
 fpga_project
 bsv_build
-verilog
 *.jou
 
 *.log
