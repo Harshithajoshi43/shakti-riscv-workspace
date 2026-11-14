@@ -1,0 +1,14 @@
+# VSDSquadron FM - iCE40UP5K-SG48
+
+# Clock and reset
+set_io clk       35
+set_io reset_n   23
+
+# UART
+set_io uart_tx   4
+set_io uart_rx   3
+
+# RGB LED
+set_io led_green 39
+set_io led_red   40
+set_io led_blue  41
